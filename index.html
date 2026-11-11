@@ -38,6 +38,7 @@
   --danger: #ff4f6e;
   --good: #4fe38a;
   --violet: #a98bff;
+  --mint: #7dffb0;        /* the auto turret */
   --font-display: 'Russo One', 'Arial Black', Impact, sans-serif;
   --font-ui: 'Chakra Petch', 'Segoe UI', system-ui, sans-serif;
   color-scheme: dark;
@@ -141,6 +142,18 @@ p { margin: 0; }
 .upg .buy { min-width: 96px; padding: 10px 12px; min-height: 44px; font-variant-numeric: tabular-nums; }
 .upg .buy.max { color: var(--good); border-color: rgba(79,227,138,.35); }
 .upg .item.hot { border-color: rgba(255,180,58,.5); }
+/* Auto turret: mint marks everything that belongs to it */
+.upg .item.auto { border-color: rgba(125,255,176,.35); }
+.upg .item.auto .name { color: var(--mint); }
+.upg .item.locked { opacity: .75; }
+.upg .item.hot.auto { border-color: rgba(255,180,58,.5); }
+.unlock {
+  border: 1px solid rgba(125,255,176,.55); border-radius: 12px; padding: 12px 14px; background: rgba(125,255,176,.08);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.unlock .k { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mint); font-weight: 700; }
+.unlock .t { font-family: var(--font-display); font-size: 1.2rem; }
+.unlock p { color: var(--muted); font-size: .9rem; }
 
 /* Settings toggles */
 .toggle {
@@ -154,6 +167,7 @@ p { margin: 0; }
 .preview .tag { font-size: .78rem; padding: 4px 9px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--line); color: var(--muted); }
 .preview .tag.boss { color: var(--danger); border-color: rgba(255,79,110,.45); font-weight: 700; }
 .preview .tag.new { color: var(--violet); border-color: rgba(169,139,255,.45); }
+.preview .tag.auto { color: var(--mint); border-color: rgba(125,255,176,.4); }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
 .stat { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
 .stat .k { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
@@ -242,6 +256,7 @@ details ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size
           <li>Shoot the falling crates to grab power-ups: Freeze, Rapid fire, Blast, Repair and Coins.</li>
           <li>Kill streaks raise your coin bonus up to 1.5x. Coins buy permanent upgrades between levels.</li>
           <li>A boss shows up every fifth level. It spawns minions and lobs orbs you can shoot down.</li>
+          <li>At Level 3 an auto turret joins the spire for free. It fires by itself at anything that gets close, inside the dotted arc. Crates and the far field are yours.</li>
           <li>Keyboard: P or Esc pauses. Space fires in Hold mode.</li>
         </ul>
       </details>
@@ -268,6 +283,11 @@ details ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size
       <div class="row between">
         <h2>Upgrades</h2>
         <span class="coinpill"><span class="coin"></span><span id="shop-coins">0</span></span>
+      </div>
+      <div class="unlock" id="shop-unlock" hidden>
+        <div class="k">New power unlocked</div>
+        <div class="t">Auto turret online</div>
+        <p>A second gun now stands beside the spire. It fires by itself at anything that gets close, inside the dotted arc. The far field, the crates and the bosses are still yours. Make it stronger below.</p>
       </div>
       <div class="stack">
         <h3 id="shop-nextlabel">Next: Level 1</h3>
@@ -305,6 +325,7 @@ details ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size
       <div class="stats">
         <div class="stat"><div class="k">Coins earned</div><div class="v ac" id="rs-coins">0</div></div>
         <div class="stat"><div class="k">Kills</div><div class="v" id="rs-kills">0</div></div>
+        <div class="stat" id="rs-auto-wrap" hidden><div class="k">By auto turret</div><div class="v" id="rs-auto">0</div></div>
         <div class="stat"><div class="k">Best streak</div><div class="v" id="rs-streak">0</div></div>
         <div class="stat"><div class="k">Leaked</div><div class="v" id="rs-leaks">0</div></div>
       </div>
@@ -325,7 +346,7 @@ details ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size
    the best upgrade they can afford) at roughly 1.4 to 2.3 times the firepower
    a level needs. Regenerate it there if the upgrade table changes.
    ========================================================================= */
-const HP_CURVE_RAW = [1.063,1.448,1.935,2.355,2.865,3.488,4.207,4.196,5.739,7.799,13.787,19.763,31.558,48.454,69.911,104.023,149.604,211.331,293.676,426.103,591.57,799.39,1078.938,1433.239,1738.727,2396.247,3066.385,3885.953,5004.853,6027.164,7731.063,9521.619,11584.459,13500.824,17497.135,20751.803,25120.135,29679.221,33737.294,41586.646,48261.727,56028.442,65025.176,74049.146,84351.406,102997.546,118927.128,137134.441,157796.873,177934.4,200714.76,226490.997,255663.946,288688.766,326082.377,376084.001,416404.407,470757.648,532352.765,602168.384,681316.813,771062.464,872842.822,988292.337,1119269.627,1267888.471,1436553.107,1627998.448,1853723.796,2097701.69,2355137.796,2649445.285,2810871.912,3230203.211,3712140.602,4266036.956,4805845.451,5307342.021,5745880.042,6098281.035];
+const HP_CURVE_RAW = [1.063,1.448,2.198,2.761,3.469,4.36,5.259,5.245,7.174,9.748,17.282,25.528,39.874,61.237,89.349,131.834,191.55,262.922,388.661,563.443,785.668,1090.425,1504.191,2013.237,2608.091,3465.813,4479.874,5562.168,7335.528,9177.377,11404.313,14126.838,16369.344,21198.819,24892.873,31133.268,36909.049,45463.036,54823.102,62343.945,76874.995,89246.417,105665.91,120329.862,137071.035,167371.012,193256.583,222843.466,256419.919,289143.4,326161.485,368047.87,415453.913,469119.245,529883.863,598701.876,676657.162,764981.178,865073.243,978523.623,1107139.822,1252976.504,1418369.585,1605975.047,1818813.144,2060318.766,2334398.798,2645497.477,3012301.169,3408765.246,3827098.918,4305348.589,4567666.856,5249080.217,6032228.479,6932310.054,7809498.858,8624430.783,9337055.069,9909706.682];
 const HP_CURVE = HP_CURVE_RAW.map((v, i, a) => Math.max(v, i ? a[i - 1] : 0));
 for (let i = 1; i < HP_CURVE.length; i++) HP_CURVE[i] = Math.max(HP_CURVE[i], HP_CURVE[i - 1]);
 const HP_TAIL = 1.1126;
@@ -337,8 +358,16 @@ const B = {
   bossEvery: 5,
 };
 
+// The auto turret: a second gun beside the spire that aims and fires by itself.
+// It arrives free at `unlock`, fires at half the main gun's rate, and the upgrade
+// sets what share of the main gun's firepower it adds. Guns sit low and wide of the
+// spire, clear of the strip where enemies arrive. `range` keeps it a close-defense gun:
+// it only engages what has come within that distance of the spire, so it mops up what
+// gets past you but cannot clear a level, or reach a boss, on its own.
+const SENTRY = { unlock: 3, rateMul: 0.5, secondGunAt: 5, range: 430, mounts: [{ dx: 100, dy: 30 }, { dx: -100, dy: 30 }] };
+
 const UPS = {
-  dmg:    { name: 'Damage',     base: 25,  g: 1.13, max: 999, eff: n => Math.pow(1.15, n),
+  dmg:    { name: 'Damage',    base: 25,  g: 1.13, max: 999, eff: n => Math.pow(1.15, n),
             text: n => `${fmt(B.baseDmg * UPS.dmg.eff(n))} per shot` },
   rof:    { name: 'Fire rate',  base: 30,  g: 1.19, max: 20,  eff: n => Math.pow(1.08, n),
             text: n => `${(B.baseRof * UPS.rof.eff(n)).toFixed(1)} shots/s` },
@@ -348,14 +377,16 @@ const UPS = {
             text: n => `${UPS.multi.eff(n)} bullet${n ? 's' : ''} per shot` },
   pierce: { name: 'Piercing',   base: 300, g: 4.0,  max: 3,   eff: n => n,
             text: n => `each bullet hits ${1 + n} enem${n ? 'ies' : 'y'}` },
-  hp:     { name: 'Spire armor', base: 20, g: 1.13, max: 999, eff: n => Math.pow(1.15, n),
+  sentry: { name: 'Auto turret', base: 40, g: 1.6,  max: 10,  eff: n => (n ? 0.30 + 0.05 * (n - 1) : 0),
+            text: n => `${Math.round(UPS.sentry.eff(n) * 100)}% of your firepower${n >= SENTRY.secondGunAt ? ', 2 guns' : ''}` },
+  hp:    { name: 'Spire armor', base: 20, g: 1.13, max: 999, eff: n => Math.pow(1.15, n),
             text: n => `${fmt(B.towerHP * UPS.hp.eff(n))} health` },
   regen:  { name: 'Repair crew', base: 60, g: 1.22, max: 12,  eff: n => 0.004 * n,
             text: n => `heals ${(UPS.regen.eff(n) * 100).toFixed(1)}% per second` },
   coin:   { name: 'Coin bonus', base: 80,  g: 1.24, max: 15,  eff: n => 1 + 0.08 * n,
             text: n => `+${Math.round((UPS.coin.eff(n) - 1) * 100)}% coins` },
 };
-const UP_ORDER = ['dmg', 'rof', 'crit', 'multi', 'pierce', 'hp', 'regen', 'coin'];
+const UP_ORDER = ['dmg', 'rof', 'crit', 'multi', 'pierce', 'sentry', 'hp', 'regen', 'coin'];
 const upCost = (k, n) => Math.round(UPS[k].base * Math.pow(UPS[k].g, n));
 
 // Enemy types. hp/coin are multipliers of the level's base; speed in px/s; dmg is contact damage before scaling.
@@ -429,8 +460,9 @@ const SAVE_KEY = 'ironspire.save.v1';
 function defaultSave() {
   return {
     v: 1, level: 1, coins: 0,
-    up: { dmg: 0, rof: 0, crit: 0, multi: 0, pierce: 0, hp: 0, regen: 0, coin: 0 },
+    up: { dmg: 0, rof: 0, crit: 0, multi: 0, pierce: 0, sentry: 0, hp: 0, regen: 0, coin: 0 },
     best: 0, stats: { kills: 0, cleared: 0, coins: 0, bosses: 0 },
+    flags: { sentryNew: false },
     settings: { sound: true, fire: (window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches) ? 'always' : 'hold', assist: true },
     updatedAt: 0,
   };
@@ -443,6 +475,7 @@ function normalizeSave(s) {
   for (const k of UP_ORDER) d.up[k] = clamp(Math.floor(+(s.up && s.up[k]) || 0), 0, UPS[k].max);
   d.best = Math.max(0, Math.floor(+s.best || 0));
   if (s.stats) for (const k of Object.keys(d.stats)) d.stats[k] = Math.max(0, Math.floor(+s.stats[k] || 0));
+  if (s.flags) d.flags.sentryNew = !!s.flags.sentryNew;
   if (s.settings) {
     if (typeof s.settings.sound === 'boolean') d.settings.sound = s.settings.sound;
     if (s.settings.fire === 'hold' || s.settings.fire === 'always') d.settings.fire = s.settings.fire;
@@ -461,10 +494,16 @@ function persist() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {}
   cloudSchedule();
 }
+// The auto turret arrives for free the moment level 3 is reachable. A save from
+// before the turret existed gets it the first time it loads.
+function grantUnlocks() {
+  if (save.level >= SENTRY.unlock && save.up.sentry < 1) { save.up.sentry = 1; save.flags.sentryNew = true; return true; }
+  return false;
+}
 
 /* ========================= audio ========================= */
 const sfx = (() => {
-  let ctx = null, master = null, lastShot = 0;
+  let ctx = null, master = null, lastShot = 0, lastSentry = 0;
   function ensure() {
     if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return true; }
     try {
@@ -494,6 +533,8 @@ const sfx = (() => {
   return {
     unlock: ensure,
     shoot() { const now = performance.now(); if (now - lastShot < 45) return; lastShot = now; tone(620, 0.06, 'square', 0.12, 0.5); },
+    sentry() { const now = performance.now(); if (now - lastSentry < 70) return; lastSentry = now; tone(410, 0.05, 'triangle', 0.09, 0.6); },
+    unlockFanfare() { [392, 523, 659, 784, 1047].forEach((f, i) => tone(f, 0.2, 'square', 0.18, 0, i * 0.09)); },
     hit() { tone(220, 0.04, 'triangle', 0.1, 0.7); },
     kill() { tone(180, 0.12, 'sawtooth', 0.18, 0.3); noise(0.08, 0.15); },
     pickup() { tone(660, 0.08, 'square', 0.18); tone(880, 0.08, 'square', 0.18, 0, 0.07); tone(1320, 0.12, 'square', 0.18, 0, 0.14); },
@@ -536,10 +577,11 @@ function glow(color, r) {
   }
   return c;
 }
-const RGB = { cyan: 'rgb(63,224,255)', amber: 'rgb(255,180,58)', red: 'rgb(255,79,110)', green: 'rgb(79,227,138)', violet: 'rgb(169,139,255)', white: 'rgb(255,255,255)' };
+const RGB = { mint: 'rgb(125,255,176)', cyan: 'rgb(63,224,255)', amber: 'rgb(255,180,58)', red: 'rgb(255,79,110)', green: 'rgb(79,227,138)', violet: 'rgb(169,139,255)', white: 'rgb(255,255,255)' };
 
 /* ========================= game state ========================= */
 const tower = { x: 270, y: 840, hp: 100, maxHp: 100, angle: -Math.PI / 2, recoil: 0, flash: 0 };
+const sentry = { guns: 0, cd: 0, next: 0, angle: [-Math.PI / 2, -Math.PI / 2], recoil: [0, 0] };
 const input = { aimX: 270, aimY: 300, down: false, pointerId: null, hasAim: false, space: false };
 let state = 'menu'; // menu | shop | playing | paused | result
 let level = null;   // runtime level object
@@ -556,11 +598,15 @@ function playerStats() {
     crit: UPS.crit.eff(u.crit),
     bullets: UPS.multi.eff(u.multi),
     pierce: UPS.pierce.eff(u.pierce),
+    sentry: UPS.sentry.eff(u.sentry),
+    sentryGuns: u.sentry >= SENTRY.secondGunAt ? 2 : u.sentry >= 1 ? 1 : 0,
     maxHp: B.towerHP * UPS.hp.eff(u.hp),
     regen: UPS.regen.eff(u.regen),
     coinMul: UPS.coin.eff(u.coin),
   };
 }
+// Menus show the guns the save owns, so a new or upgraded turret is visible behind the shop.
+function showSentry() { sentry.guns = playerStats().sentryGuns; }
 
 function startLevel(L) {
   const plan = levelPlan(L);
@@ -568,12 +614,15 @@ function startLevel(L) {
   level = {
     L, plan, ps, t: 0, wave: -1, waveT: 0, spawnQueue: [], spawned: 0, waveDone: false, gap: 1.2,
     bossSpawned: false, boss: null, allSpawned: false, over: false,
-    coinsEarned: 0, kills: 0, leaks: 0, streak: 0, bestStreak: 0, lastKill: -99, lastCritText: -1, waveDropped: true, forceDrop: false,
+    coinsEarned: 0, kills: 0, sentryKills: 0, leaks: 0, streak: 0, bestStreak: 0, lastKill: -99, lastCritText: -1, waveDropped: true, forceDrop: false,
     hpS: hpScalar(L), coinS: coinScalar(L), spd: speedMul(L), dmgS: Math.sqrt(hpScalar(L)),
   };
   enemies = []; bullets = []; crates = []; orbs = []; parts = []; texts = [];
   shake = 0; fxFreeze = 0; fxRapid = 0; fireCooldown = 0; banner = null;
   tower.maxHp = ps.maxHp; tower.hp = ps.maxHp; tower.flash = 0; tower.recoil = 0;
+  sentry.guns = ps.sentryGuns; sentry.cd = 0.6; sentry.next = 0; sentry.recoil[0] = sentry.recoil[1] = 0;
+  sentry.angle[0] = sentry.angle[1] = -Math.PI / 2;
+  if (save.flags.sentryNew) { save.flags.sentryNew = false; persist(); }
   input.down = false;
   setState('playing');
   hudStatic();
@@ -661,14 +710,44 @@ function fire(dt) {
     if (best !== null) ang = best;
   }
   tower.angle = ang; tower.recoil = 1;
-  const n = ps.bullets, spread = (n - 1) * 0.07;
+  volley(tower.x + Math.cos(ang) * 40, tower.y + Math.sin(ang) * 40, ang, ps.dmg, 'main');
+  sfx.shoot();
+}
+// One volley: the gun's bullet count fanned around the aim angle. Used by the main gun and the auto turret.
+function volley(sx, sy, ang, dmg, kind) {
+  const ps = level.ps, n = ps.bullets, spread = (n - 1) * 0.07;
   for (let i = 0; i < n; i++) {
     const a = ang - spread / 2 + (n > 1 ? spread * i / (n - 1) : 0) + rand(-0.01, 0.01);
     const crit = Math.random() < ps.crit;
-    const sx = tower.x + Math.cos(ang) * 40, sy = tower.y + Math.sin(ang) * 40;
-    bullets.push({ x: sx, y: sy, vx: Math.cos(a) * B.bulletSpeed, vy: Math.sin(a) * B.bulletSpeed, dmg: ps.dmg * (crit ? B.critMult : 1), crit, left: 1 + ps.pierce, hit: new Set(), t: 0 });
+    bullets.push({ x: sx, y: sy, vx: Math.cos(a) * B.bulletSpeed, vy: Math.sin(a) * B.bulletSpeed, dmg: dmg * (crit ? B.critMult : 1), crit, kind, left: 1 + ps.pierce, hit: new Set(), t: 0 });
   }
-  sfx.shoot();
+}
+// The auto turret: picks whatever is closest to the spire inside its range, leads it, and fires on its own clock.
+function sentryFire(dt) {
+  const ps = level.ps;
+  if (!ps.sentryGuns) return;
+  sentry.cd -= dt;
+  let best = null, bd = SENTRY.range;
+  for (const e of enemies) { if (e.dead || e.y < 10) continue; const d = Math.hypot(e.x - tower.x, e.y - tower.y); if (d < bd) { bd = d; best = e; } }
+  for (const o of orbs) { if (o.dead) continue; const d = Math.hypot(o.x - tower.x, o.y - tower.y); if (d < bd) { bd = d; best = o; } }
+  if (!best) { sentry.cd = Math.max(sentry.cd, 0); return; }
+  const slow = fxFreeze > 0 ? 0.35 : 1;
+  const tvx = (best.mvx !== undefined ? best.mvx : best.vx) * slow, tvy = (best.mvy !== undefined ? best.mvy : best.vy) * slow;
+  const mount = (i) => ({ x: tower.x + SENTRY.mounts[i].dx, y: tower.y + SENTRY.mounts[i].dy });
+  const aimFrom = (m) => {
+    let tx = best.x, ty = best.y;
+    for (let i = 0; i < 2; i++) { const t = Math.hypot(tx - m.x, ty - m.y) / B.bulletSpeed; tx = best.x + tvx * t; ty = best.y + tvy * t; }
+    return clampAngle(Math.atan2(ty - m.y, tx - m.x));
+  };
+  for (let i = 0; i < ps.sentryGuns; i++) sentry.angle[i] = aimFrom(mount(i));
+  if (sentry.cd > 0) return;
+  const rate = ps.rof * SENTRY.rateMul * (fxRapid > 0 ? 2 : 1);
+  sentry.cd += 1 / rate;
+  const gi = sentry.next++ % ps.sentryGuns, m = mount(gi), ang = sentry.angle[gi];
+  sentry.recoil[gi] = 1;
+  // Half the shots, so each one carries twice the share: the turret adds `share` of the main gun's firepower.
+  volley(m.x + Math.cos(ang) * 28, m.y + Math.sin(ang) * 28, ang, ps.dmg * ps.sentry / SENTRY.rateMul, 'sentry');
+  sfx.sentry();
 }
 const normAng = a => { while (a > Math.PI) a -= 6.283185; while (a < -Math.PI) a += 6.283185; return a; };
 function clampAngle(a) { // keep the barrel in the upper half, never pointing into the ground
@@ -678,10 +757,10 @@ function clampAngle(a) { // keep the barrel in the upper half, never pointing in
   return a;
 }
 
-function damageEnemy(e, dmg, crit, bx, by) {
+function damageEnemy(e, dmg, crit, bx, by, kind) {
   e.hp -= dmg; e.flash = 0.08;
   if (crit && level.t - level.lastCritText > 0.12) { level.lastCritText = level.t; addText(bx + rand(-6, 6), by - 6, fmt(dmg) + '!', '#ffb43a', 17); }
-  if (e.hp <= 0) killEnemy(e, bx, by); else sfx.hit();
+  if (e.hp <= 0) { if (kind === 'sentry') level.sentryKills++; killEnemy(e, bx, by); } else sfx.hit();
 }
 function killEnemy(e, x, y) {
   const lv = level, now = lv.t;
@@ -745,6 +824,7 @@ function cosmetics(dt) {
   if (banner) { banner.t += dt; if (banner.t > banner.dur) banner = null; }
   shake = Math.max(0, shake - dt * 30);
   if (tower.flash > 0) tower.flash -= dt; if (tower.recoil > 0) tower.recoil = Math.max(0, tower.recoil - dt * 8);
+  for (let i = 0; i < 2; i++) if (sentry.recoil[i] > 0) sentry.recoil[i] = Math.max(0, sentry.recoil[i] - dt * 8);
   parts = parts.filter(p => p.t < p.life);
   texts = texts.filter(t => t.t < t.life);
 }
@@ -779,6 +859,7 @@ function update(dt) {
 
   // --- fire ---
   fire(dt);
+  sentryFire(dt);
 
   // --- enemies ---
   for (const e of enemies) {
@@ -786,7 +867,8 @@ function update(dt) {
     const sp = e.speed * slow;
     if (e.type === 'boss') {
       const holdY = H * 0.28;
-      if (e.y < holdY) e.y += sp * dt; else { e.hold = true; e.x += Math.sin(e.t * 0.6) * 28 * dt; e.x = clamp(e.x, 90, W - 90); }
+      if (e.y < holdY) { e.y += sp * dt; e.mvx = 0; e.mvy = e.speed; }
+      else { e.hold = true; e.x += Math.sin(e.t * 0.6) * 28 * dt; e.x = clamp(e.x, 90, W - 90); e.mvx = 0; e.mvy = 0; }
       if (e.hold) {
         e.minionT -= dt * slow; e.orbT -= dt * slow;
         if (e.minionT <= 0 && e.minions < 6) { e.minionT = 4; e.minions++; const side = Math.random() < 0.5 ? -1 : 1; spawnEnemy('runner', e.x + side * 40, e.y + 20, { fromBoss: true, vx: side * 60 }); }
@@ -798,9 +880,14 @@ function update(dt) {
       }
       continue;
     }
-    // walk toward the tower; zigzaggers weave; minis carry a launch velocity that decays
-    const dx = e.tx - e.x, dy = tower.y - e.y, d = Math.hypot(dx, dy) || 1;
+    // walk toward the tower; zigzaggers weave; minis carry a launch velocity that decays.
+    // Each enemy heads for its own spot along the spire's line, which spreads the horde out, then
+    // turns in on the spire itself once close. Without the turn, a spot wider than the spire's
+    // reach left the enemy parked beside it, alive and harmless.
+    const close = Math.hypot(e.x - tower.x, e.y - tower.y) < 150;
+    const dx = (close ? tower.x : e.tx) - e.x, dy = tower.y - e.y, d = Math.hypot(dx, dy) || 1;
     let mx = dx / d * sp, my = dy / d * sp;
+    e.mvx = dx / d * e.speed; e.mvy = dy / d * e.speed; // heading the auto turret leads (before freeze)
     if (e.type === 'zig') mx += Math.cos(e.t * 3.2 + e.phase) * 120;
     if (e.vx || e.vy) { mx += e.vx; my += e.vy; e.vx *= Math.pow(0.1, dt); e.vy *= Math.pow(0.1, dt); }
     e.x += mx * dt; e.y += my * dt;
@@ -822,16 +909,18 @@ function update(dt) {
   for (const b of bullets) {
     b.t += dt; b.x += b.vx * dt; b.y += b.vy * dt;
     if (b.y < -40 || b.x < -40 || b.x > W + 40 || b.y > H + 40) { b.dead = true; continue; }
+    // the auto turret's shots stop at the edge of its range, so they cannot chip at a boss from afar
+    if (b.kind === 'sentry') { const rx = b.x - tower.x, ry = b.y - tower.y, lim = SENTRY.range + 30; if (rx * rx + ry * ry > lim * lim) { b.dead = true; continue; } }
     for (const e of enemies) {
       if (e.dead || b.hit.has(e) || e.y < -e.r) continue;
       const dx = e.x - b.x, dy = e.y - b.y;
       if (dx * dx + dy * dy < (e.r + 5) * (e.r + 5)) {
-        b.hit.add(e); damageEnemy(e, b.dmg, b.crit, b.x, b.y);
+        b.hit.add(e); damageEnemy(e, b.dmg, b.crit, b.x, b.y, b.kind);
         if (--b.left <= 0) { b.dead = true; break; }
       }
     }
     if (b.dead) continue;
-    for (const c of crates) {
+    if (b.kind === 'main') for (const c of crates) { // crates are yours to shoot; the auto turret leaves them alone
       if (c.dead) continue;
       const dx = c.x - b.x, dy = c.y - b.y;
       if (dx * dx + dy * dy < (c.r + 6) * (c.r + 6)) { c.dead = true; b.dead = true; collectCrate(c); break; }
@@ -867,6 +956,7 @@ function endLevel(won) {
     save.coins += bonus; lv.coinsEarned += bonus; save.stats.cleared++;
     if (lv.L >= save.level) save.level = lv.L + 1;
     save.best = Math.max(save.best, lv.L);
+    grantUnlocks();
     sfx.clear();
   } else { sfx.fail(); }
   save.stats.coins += lv.coinsEarned;
@@ -877,6 +967,7 @@ function endLevel(won) {
     : `You keep all ${fmtInt(lv.coinsEarned)} coins you earned. Spend them, then try Level ${lv.L} again.`;
   $('rs-coins').textContent = fmtInt(lv.coinsEarned);
   $('rs-kills').textContent = fmtInt(lv.kills);
+  $('rs-auto-wrap').hidden = !lv.ps.sentryGuns; $('rs-auto').textContent = fmtInt(lv.sentryKills);
   $('rs-streak').textContent = lv.bestStreak + 'x';
   $('rs-leaks').textContent = fmtInt(lv.leaks);
   $('btn-result').textContent = won ? 'Continue to upgrades' : 'Back to upgrades';
@@ -908,6 +999,7 @@ function render(now) {
   if (fxFreeze > 0) { ctx.fillStyle = `rgba(63,224,255,${0.05 + 0.05 * Math.min(1, fxFreeze)})`; ctx.fillRect(-20, -20, W + 40, H + 40); }
 
   drawTower(tsec);
+  drawSentries(tsec);
 
   // crates
   for (const c of crates) drawCrate(c, tsec);
@@ -923,8 +1015,9 @@ function render(now) {
   // bullets
   for (const b of bullets) {
     const len = 14, nx = b.vx / B.bulletSpeed, ny = b.vy / B.bulletSpeed;
-    ctx.drawImage(glow(b.crit ? RGB.amber : RGB.cyan, 14), b.x - 14, b.y - 14);
-    ctx.strokeStyle = b.crit ? '#ffd27a' : '#bdf4ff'; ctx.lineWidth = b.crit ? 4 : 3; ctx.lineCap = 'round';
+    const auto = b.kind === 'sentry';
+    ctx.drawImage(glow(b.crit ? RGB.amber : auto ? RGB.mint : RGB.cyan, 14), b.x - 14, b.y - 14);
+    ctx.strokeStyle = b.crit ? '#ffd27a' : auto ? '#c9ffe0' : '#bdf4ff'; ctx.lineWidth = b.crit ? 4 : 3; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(b.x - nx * len, b.y - ny * len); ctx.lineTo(b.x, b.y); ctx.stroke();
   }
   // particles
@@ -972,6 +1065,29 @@ function drawTower(tsec) {
   ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.arc(x, y, R + 20, 0, 6.283); ctx.stroke();
   ctx.strokeStyle = frac > 0.5 ? '#4fe38a' : frac > 0.25 ? '#ffb43a' : '#ff4f6e';
   ctx.beginPath(); ctx.arc(x, y, R + 20, -Math.PI / 2, -Math.PI / 2 + frac * 6.283); ctx.stroke();
+}
+// The auto turret guns: small hex bases low and wide of the spire, mint so they read as their own thing.
+function drawSentries(tsec) {
+  if (sentry.guns) { // faint arc at the edge of the ground the turret covers
+    ctx.save(); ctx.strokeStyle = 'rgba(125,255,176,0.13)'; ctx.lineWidth = 2; ctx.setLineDash([4, 14]);
+    ctx.beginPath(); ctx.arc(tower.x, tower.y, SENTRY.range, Math.PI, 2 * Math.PI); ctx.stroke(); ctx.restore();
+  }
+  for (let i = 0; i < sentry.guns; i++) {
+    const x = tower.x + SENTRY.mounts[i].dx, y = tower.y + SENTRY.mounts[i].dy, rec = sentry.recoil[i] * 4;
+    // strut back to the spire, so the gun reads as part of it
+    ctx.strokeStyle = '#27385c'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(tower.x + Math.sign(SENTRY.mounts[i].dx) * (B.towerR + 8), tower.y + 12); ctx.lineTo(x, y); ctx.stroke();
+    ctx.drawImage(glow(RGB.mint, 44), x - 44, y - 44);
+    ctx.fillStyle = '#1d2740'; ctx.strokeStyle = '#3f8f68'; ctx.lineWidth = 2.5;
+    hexPath(x, y, 22); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#263a4a'; hexPath(x, y, 15); ctx.fill();
+    ctx.save(); ctx.translate(x, y); ctx.rotate(sentry.angle[i]);
+    ctx.fillStyle = '#3a5a5c'; ctx.fillRect(7 - rec, -7, 23, 14);
+    ctx.fillStyle = '#b6ffd6'; ctx.fillRect(22 - rec, -4, 11, 8);
+    ctx.restore();
+    const pulse = 0.5 + 0.5 * Math.sin(tsec * 4 + i * 2);
+    ctx.fillStyle = `rgb(${125 + 60 * pulse},255,${176 + 40 * pulse})`; ctx.beginPath(); ctx.arc(x, y, 5 + pulse, 0, 6.283); ctx.fill();
+  }
 }
 function hexPath(x, y, r) { ctx.beginPath(); for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + i * Math.PI / 3; const px = x + Math.cos(a) * r, py = y + Math.sin(a) * r; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.closePath(); }
 function drawEnemy(e, tsec) {
@@ -1059,6 +1175,7 @@ function renderMenu() {
   $('btn-continue').textContent = hasProgress ? `Continue · Level ${save.level}` : 'Play';
   $('btn-newgame').hidden = !hasProgress;
   $('btn-reset').hidden = !hasProgress;
+  showSentry();
   syncToggles();
 }
 function syncToggles() {
@@ -1069,26 +1186,32 @@ function syncToggles() {
 }
 function renderShop() {
   const L = save.level, plan = levelPlan(L);
+  showSentry();
   $('shop-coins').textContent = fmtInt(save.coins);
   $('shop-nextlabel').textContent = `Next: Level ${L}`;
+  $('shop-unlock').hidden = !save.flags.sentryNew;
   const tags = [`${plan.total} enemies`, `${plan.waves.length} waves`];
   const pv = $('shop-preview'); pv.innerHTML = '';
   for (const t of tags) { const s = document.createElement('span'); s.className = 'tag'; s.textContent = t; pv.appendChild(s); }
   if (plan.newType) { const s = document.createElement('span'); s.className = 'tag new'; s.textContent = `New: ${TYPE_LABEL[plan.newType]}`; pv.appendChild(s); }
   if (plan.boss) { const s = document.createElement('span'); s.className = 'tag boss'; s.textContent = 'Boss level'; pv.appendChild(s); }
+  if (save.up.sentry < 1) { const s = document.createElement('span'); s.className = 'tag auto'; s.textContent = `Auto turret unlocks at Level ${SENTRY.unlock}`; pv.appendChild(s); }
   const list = $('shop-list'); list.innerHTML = '';
+  const locked = k => k === 'sentry' && save.up.sentry < 1;
   // the cheapest affordable upgrade gets a highlight so new players always see a next step
   let cheapest = null;
-  for (const k of UP_ORDER) { const n = save.up[k]; if (n < UPS[k].max) { const c = upCost(k, n); if (c <= save.coins && (!cheapest || c < cheapest.c)) cheapest = { k, c }; } }
+  for (const k of UP_ORDER) { const n = save.up[k]; if (!locked(k) && n < UPS[k].max) { const c = upCost(k, n); if (c <= save.coins && (!cheapest || c < cheapest.c)) cheapest = { k, c }; } }
   for (const k of UP_ORDER) {
-    const U = UPS[k], n = save.up[k], maxed = n >= U.max, cost = maxed ? 0 : upCost(k, n);
-    const item = document.createElement('div'); item.className = 'item' + (cheapest && cheapest.k === k ? ' hot' : '');
+    const U = UPS[k], n = save.up[k], maxed = n >= U.max, lock = locked(k), cost = maxed ? 0 : upCost(k, n);
+    const item = document.createElement('div'); item.className = 'item' + (cheapest && cheapest.k === k ? ' hot' : '') + (k === 'sentry' ? ' auto' : '') + (lock ? ' locked' : '');
     const left = document.createElement('div');
-    left.innerHTML = `<div class="name">${U.name} <span class="lv">LV ${n}${U.max < 999 ? ' / ' + U.max : ''}</span></div>
+    if (lock) left.innerHTML = `<div class="name">${U.name} <span class="lv">LOCKED</span></div><div class="eff">A second gun that guards the ground near the spire and fires by itself. Unlocks free when you reach Level ${SENTRY.unlock}.</div>`;
+    else left.innerHTML = `<div class="name">${U.name} <span class="lv">LV ${n}${U.max < 999 ? ' / ' + U.max : ''}</span></div>
       <div class="eff">${maxed ? `<b>${U.text(n)}</b> · maxed` : `${U.text(n)} <b>→ ${U.text(n + 1)}</b>`}</div>`;
     const btn = document.createElement('button'); btn.className = 'btn buy' + (maxed ? ' max' : ''); btn.type = 'button';
     btn.id = 'buy-' + k;
-    if (maxed) { btn.textContent = 'MAX'; btn.disabled = true; }
+    if (lock) { btn.textContent = `Level ${SENTRY.unlock}`; btn.disabled = true; }
+    else if (maxed) { btn.textContent = 'MAX'; btn.disabled = true; }
     else { btn.innerHTML = `<span class="coin"></span> ${fmtInt(cost)}`; btn.disabled = cost > save.coins; btn.setAttribute('aria-label', `Buy ${U.name} level ${n + 1} for ${fmtInt(cost)} coins`); }
     btn.addEventListener('click', () => buy(k));
     item.appendChild(left); item.appendChild(btn); list.appendChild(item);
@@ -1098,6 +1221,7 @@ function renderShop() {
 }
 function buy(k) {
   const n = save.up[k]; if (n >= UPS[k].max) return;
+  if (k === 'sentry' && n < 1) return; // still locked: it arrives free at its level
   const c = upCost(k, n); if (c > save.coins) { toast('Not enough coins yet. Play a level, every coin counts.'); return; }
   save.coins -= c; save.up[k]++; persist(); sfx.unlock(); sfx.pickup();
   renderShop();
@@ -1155,7 +1279,7 @@ $('btn-pause').addEventListener('click', () => { if (state === 'paused') resumeG
 $('btn-resume').addEventListener('click', resumeGame);
 $('btn-restart').addEventListener('click', () => { const L = level.L; abandonLevel(); startLevel(L); });
 $('btn-quit').addEventListener('click', () => { abandonLevel(); setState('shop'); });
-$('btn-result').addEventListener('click', () => setState('shop'));
+$('btn-result').addEventListener('click', () => { if (save.flags.sentryNew) sfx.unlockFanfare(); setState('shop'); });
 function abandonLevel() { if (level && !level.over) { level.over = true; save.stats.coins += level.coinsEarned; persist(); } $('hud-boss').hidden = true; }
 function toggleSound() { save.settings.sound = !save.settings.sound; persist(); syncToggles(); if (save.settings.sound) { sfx.unlock(); sfx.pickup(); } }
 $('tg-sound').addEventListener('click', toggleSound); $('tg-sound2').addEventListener('click', toggleSound);
@@ -1201,7 +1325,7 @@ $('btn-xfer-load').addEventListener('click', () => {
     return;
   }
   clearTimeout(xferArm.timer); xferArm.code = ''; btn.textContent = 'Load pasted code';
-  next.settings = save.settings; save = next; persist();
+  next.settings = save.settings; save = next; grantUnlocks(); persist();
   $('xfer-in').value = ''; renderMenu(); xferRefresh();
   toast(`Progress loaded. You are on Level ${save.level}.`);
 });
@@ -1229,6 +1353,7 @@ async function cloudInit() {
     if (remote && (+remote.updatedAt || 0) > (save.updatedAt || 0) && state !== 'playing') {
       save = normalizeSave(remote);
       try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {}
+      if (grantUnlocks()) persist(); // a save from before the auto turret existed
       if (state === 'menu') renderMenu(); if (state === 'shop') renderShop();
       toast('Progress synced from your other device.');
     } else if (!remote || (+remote.updatedAt || 0) < (save.updatedAt || 0)) {
@@ -1267,6 +1392,7 @@ function frame(now) {
 
 function boot() {
   resize();
+  if (grantUnlocks()) persist(); // a save from before the auto turret existed
   setState('menu');
   cloudBadge();
   requestAnimationFrame(frame);
@@ -1274,7 +1400,7 @@ function boot() {
 }
 boot();
 // debug handle (read-only snapshot of the run state)
-window.__spire = () => ({ state, level, enemies, bullets, crates, orbs, W, H, scale, input, tower });
+window.__spire = () => ({ state, level, enemies, bullets, crates, orbs, W, H, scale, input, tower, sentry });
 window.__spireStep = (dt) => { if (state === 'playing') update(dt); };
 window.__spireSave = () => save;
 })();
